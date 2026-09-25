@@ -142,8 +142,9 @@ function inPair(id: number): boolean {
         </template>
       </g>
 
-      <g v-if="witnessView">
+      <g v-if="witnessView" class="witness">
         <line
+          class="witness-line"
           :x1="sx(witnessView.ax)"
           :y1="sy(witnessView.ay)"
           :x2="sx(witnessView.bx)"

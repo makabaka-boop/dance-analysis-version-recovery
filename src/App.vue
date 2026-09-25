@@ -11,16 +11,13 @@ import type { ConflictDTO, PairReportDTO } from './core/types'
 
 const choreography = reactive(structuredClone(PRESETS[0].data))
 
-const { version, report, issues, computing, run } = useCollisionAnalysis(() => choreography)
+const { version, report, reportVersion, issues, computing, failed, errorMessage, run, schedule, retry } =
+  useCollisionAnalysis(() => choreography)
 
-// 编辑（含滑块无关的所有深度变化）后用版本号作废旧 Worker 结果；做轻量防抖合并连续输入
-let scheduleTimer: ReturnType<typeof setTimeout> | null = null
+// 任何深度编辑：立即作废旧版本（旧碰撞标记 / 选中证据从新路径上撤下），60ms 防抖后才快照重算
 watch(
   () => choreography,
-  () => {
-    if (scheduleTimer) clearTimeout(scheduleTimer)
-    scheduleTimer = setTimeout(() => run(), 60)
-  },
+  () => schedule(),
   { deep: true }
 )
 run()
@@ -101,9 +98,10 @@ function onSeekFraction(f: Fraction) {
   currentTime.value = f.toNumber()
 }
 
-// 新报告回来后，旧选择若已不存在（编辑所致）则丢弃
-watch(report, () => {
-  if (selectedKey.value && !selected.value) selectedKey.value = null
+// 路径编辑、计算状态、证据选中、报告必须同属一版：版本一变（编辑瞬间）
+// 就清掉旧选中，旧证据的虚线高亮不再覆盖在新路径上；旧报告也已被整体作废。
+watch(version, () => {
+  selectedKey.value = null
 })
 
 const invalid = computed(() => issues.value.length > 0)
@@ -121,9 +119,10 @@ const conflictTotal = computed(() =>
         不按帧采样、不用 SVG 像素判定
       </p>
       <span v-if="invalid" class="tag bad">校验失败 v{{ version }}</span>
+      <span v-else-if="failed" class="tag bad">分析失败 v{{ version }}</span>
       <span v-else-if="computing" class="tag run">分析中 v{{ version }}…</span>
-      <span v-else-if="conflictTotal > 0" class="tag bad">发现 {{ conflictTotal }} 条冲突 · v{{ version }}</span>
-      <span v-else class="tag ok">无冲突 · v{{ version }}</span>
+      <span v-else-if="conflictTotal > 0" class="tag bad">发现 {{ conflictTotal }} 条冲突 · v{{ reportVersion }}</span>
+      <span v-else class="tag ok">无冲突 · v{{ reportVersion }}</span>
     </header>
 
     <DancerEditor :choreography="choreography" :issues="issues" :version="version" />
@@ -151,8 +150,11 @@ const conflictTotal = computed(() =>
       :report="report"
       :computing="computing"
       :invalid="invalid"
+      :failed="failed"
+      :error-message="errorMessage"
       :selected-key="selectedKey"
       @select="onSelect"
+      @retry="retry"
     />
   </div>
 </template>
