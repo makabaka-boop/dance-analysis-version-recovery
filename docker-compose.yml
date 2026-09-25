@@ -1,0 +1,11 @@
+services:
+  stage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: stage
+    image: stage-trajectory-check:latest
+    container_name: stage-trajectory-check
+    ports:
+      - "8080:80"
+    restart: unless-stopped

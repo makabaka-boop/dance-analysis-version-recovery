@@ -1,0 +1,136 @@
+:root {
+  --bg: #0f1420;
+  --panel: #181f2e;
+  --panel-2: #1f2839;
+  --line: #2b3650;
+  --text: #e6ebf5;
+  --muted: #93a0b8;
+  --accent: #5ec8e6;
+  --danger: #ef6b6b;
+  --warn: #e8b34a;
+  --ok: #5cc88c;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.5 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 320px 1fr 340px;
+  grid-template-areas:
+    'header header header'
+    'editor stage report'
+    'editor slider report';
+  gap: 10px;
+  padding: 10px;
+  height: 100vh;
+}
+
+.app > header {
+  grid-area: header;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  min-height: 0;
+  overflow: auto;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:hover {
+  border-color: var(--accent);
+}
+button.primary {
+  background: #234a5a;
+  border-color: #356f86;
+}
+button.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+input,
+select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 13px;
+  width: 64px;
+}
+
+input[type='range'] {
+  width: 100%;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.tag.bad {
+  color: var(--danger);
+  border-color: #7a3a3a;
+}
+.tag.ok {
+  color: var(--ok);
+  border-color: #336048;
+}
+.tag.run {
+  color: var(--warn);
+  border-color: #7a6230;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+}
