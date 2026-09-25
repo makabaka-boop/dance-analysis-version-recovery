@@ -11,16 +11,14 @@ import type { ConflictDTO, PairReportDTO } from './core/types'
 
 const choreography = reactive(structuredClone(PRESETS[0].data))
 
-const { version, report, issues, computing, run } = useCollisionAnalysis(() => choreography)
+const { version, report, issues, computing, error: analysisError, scheduleRun, run, retry } =
+  useCollisionAnalysis(() => choreography)
 
-// 编辑（含滑块无关的所有深度变化）后用版本号作废旧 Worker 结果；做轻量防抖合并连续输入
-let scheduleTimer: ReturnType<typeof setTimeout> | null = null
+// 编辑后在同一渲染周期内同步作废旧版本（version++、清报告与计算状态），
+// 60ms 防抖只推迟开始计算；因此拖动期间旧标记 / 旧证据不会盖在新路径上
 watch(
   () => choreography,
-  () => {
-    if (scheduleTimer) clearTimeout(scheduleTimer)
-    scheduleTimer = setTimeout(() => run(), 60)
-  },
+  () => scheduleRun(),
   { deep: true }
 )
 run()
@@ -101,9 +99,10 @@ function onSeekFraction(f: Fraction) {
   currentTime.value = f.toNumber()
 }
 
-// 新报告回来后，旧选择若已不存在（编辑所致）则丢弃
-watch(report, () => {
-  if (selectedKey.value && !selected.value) selectedKey.value = null
+// 版本变化（编辑 / 重试）即在渲染前清掉上一版的选中证据，
+// 让路径、标记、证据、报告同属一版；新报告返回后也不允许旧选择残留
+watch(version, () => {
+  selectedKey.value = null
 })
 
 const invalid = computed(() => issues.value.length > 0)
@@ -121,9 +120,11 @@ const conflictTotal = computed(() =>
         不按帧采样、不用 SVG 像素判定
       </p>
       <span v-if="invalid" class="tag bad">校验失败 v{{ version }}</span>
+      <span v-else-if="analysisError" class="tag bad">分析失败 v{{ version }}</span>
       <span v-else-if="computing" class="tag run">分析中 v{{ version }}…</span>
       <span v-else-if="conflictTotal > 0" class="tag bad">发现 {{ conflictTotal }} 条冲突 · v{{ version }}</span>
       <span v-else class="tag ok">无冲突 · v{{ version }}</span>
+      <button v-if="analysisError" class="tag retry" type="button" @click="retry">重试</button>
     </header>
 
     <DancerEditor :choreography="choreography" :issues="issues" :version="version" />
@@ -151,8 +152,10 @@ const conflictTotal = computed(() =>
       :report="report"
       :computing="computing"
       :invalid="invalid"
+      :error="analysisError"
       :selected-key="selectedKey"
       @select="onSelect"
+      @retry="retry"
     />
   </div>
 </template>

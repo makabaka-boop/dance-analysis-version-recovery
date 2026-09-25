@@ -129,6 +129,16 @@ input[type='range'] {
   color: var(--warn);
   border-color: #7a6230;
 }
+.tag.retry {
+  cursor: pointer;
+  color: var(--warn);
+  border-color: #7a6230;
+  background: transparent;
+  font: inherit;
+}
+.tag.retry:hover {
+  background: #2a2418;
+}
 
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;

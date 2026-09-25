@@ -7,11 +7,13 @@ const props = defineProps<{
   report: AnalysisReportDTO | null
   computing: boolean
   invalid: boolean
+  error: string | null
   selectedKey: string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'select', payload: { pair: PairReportDTO; conflict: ConflictDTO; key: string } | null): void
+  (e: 'retry'): void
 }>()
 
 const pairColor = (aId: number, bId: number) =>
@@ -37,6 +39,11 @@ function distView(c: ConflictDTO): { exact: string; approx: string } {
   <aside class="panel report">
     <h2>冲突报告</h2>
     <p v-if="invalid" class="sub">编排未通过校验，无法分析（见左侧问题列表）。</p>
+    <template v-else-if="error">
+      <p class="sub"><span class="tag bad">分析失败</span></p>
+      <p class="err-box mono">{{ error }}</p>
+      <button class="primary" type="button" @click="emit('retry')">重试分析</button>
+    </template>
     <p v-else-if="computing" class="sub"><span class="tag run">分析中</span> Web Worker 正在做精确枚举…</p>
     <template v-else-if="report">
       <p class="sub">
@@ -98,6 +105,17 @@ function distView(c: ConflictDTO): { exact: string; approx: string } {
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
+}
+.err-box {
+  border: 1px solid #7a3a3a;
+  color: #e5a0a0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  word-break: break-all;
+}
+.err-box + button {
+  margin-top: 8px;
 }
 .pair-block h3 {
   margin: 14px 0 6px;
